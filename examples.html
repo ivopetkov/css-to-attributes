@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,minimal-ui">
+    <style>
+        html,
+        body {
+            padding: 0;
+            margin: 0;
+            background-color: #fff;
+            font-family: Arial;
+            font-size: 15px;
+        }
+
+        body {
+            padding: 40px;
+        }
+
+        button {
+            height: 44px;
+            background-color: #333;
+            color: #fff;
+            margin-bottom: 10px;
+            line-height: 42px;
+            padding: 0 15px;
+            border-radius: 4px;
+            border: 0;
+        }
+
+        div {
+            width: 200px;
+            height: 40px;
+            background-color: #f5f5f5;
+            margin-top: 10px;
+            line-height: 42px;
+            padding-left: 13px;
+            border-radius: 4px;
+        }
+
+        [data-color="blue"] {
+            color: #5050c6;
+        }
+
+        [data-color="white"] {
+            color: white;
+        }
+
+        [data-border="big"] {
+            border: 2px solid #5050c6;
+        }
+
+        [data-background="blue"] {
+            background-color: #5050c6;
+        }
+
+        [data-weight="bold"] {
+            font-weight: bold;
+        }
+
+        [data-size="big"] {
+            height: 80px;
+        }
+
+        [data-test-escape="! ; { } \"\" \" '' ' \\ \\\\ []<>()#$&%-./:=?@^~|,"] {
+            background-color: orange;
+        }
+
+        span {
+            --css-to-attribute-data-weight: bold;
+            --css-to-attribute-data-test-escape: \! \; \{ \} "" \" \'\' \' \ \\ []<>()#$&%-./:=?@^~|, ;
+        }
+
+        div,
+        main {
+            --css-to-attribute-data-color: blue;
+            --css-to-attribute-data-border: big;
+        }
+
+        @media (max-width: 600px) {
+            div {
+                --css-to-attribute-data-color: white;
+                --css-to-attribute-data-background: blue;
+            }
+        }
+    </style>
+    <script src="cssToAttributes.js"></script>
+    <script>
+        var textsCounter = 4;
+        var addDiv = function () {
+            console.log('Div added');
+            textsCounter++;
+            var div = document.createElement('div');
+            div.innerText = 'Text ' + textsCounter;
+            document.body.appendChild(div);
+        };
+        var removeDiv = function () {
+            var div = document.querySelector('div');
+            if (div !== null) {
+                console.log('Div removed');
+                div.parentNode.removeChild(div);
+            }
+        };
+    </script>
+</head>
+
+<body>
+    <button onclick="addDiv()">Add</button>
+    <button onclick="removeDiv()">Remove</button>
+    <div><span>Text 1</span></div>
+    <div>Text 2</div>
+    <div>Text 3</div>
+    <div>Text 4</div>
+    <script>addDiv();</script>
+    <script>
+        var style = document.createElement('style');
+        style.type = 'text/css';
+
+        setTimeout(function () {
+            console.log('Style added (added size property)');
+            style.innerHTML = "div:first-of-type{--css-to-attribute-data-size:big;}";
+            document.head.appendChild(style);
+        }, 1000);
+
+        setTimeout(function () {
+            console.log('Style updated (the size property is removed)');
+            style.innerHTML = "";
+        }, 2000);
+
+        setTimeout(function () {
+            console.log('Style added via the styleSheets object (added size property)');
+            var styleSheets = document.styleSheets;
+            var styleSheet = styleSheets[styleSheets.length - 1];
+            styleSheet.insertRule("div:first-of-type{--css-to-attribute-data-size:medium;}", styleSheet.cssRules.length);
+            styleSheet.ownerNode.setAttribute('data-version', (new Date()).getTime()); // force update
+        }, 3000);
+
+        setTimeout(function () {
+            console.log('Style changed via the styleSheets object (changed size property)');
+            var styleSheets = document.styleSheets;
+            var styleSheet = styleSheets[styleSheets.length - 1];
+            styleSheet.insertRule("div:first-of-type{--css-to-attribute-data-size:big;}", styleSheet.cssRules.length);
+            styleSheet.ownerNode.setAttribute('data-version', (new Date()).getTime()); // force update
+        }, 4000);
+
+        setTimeout(function () {
+            console.log('Attribute changed');
+            var div = document.querySelector('div');
+            div.setAttribute('data-updated', 'true');
+        }, 5000);
+    </script>
+</body>
+
+</html>

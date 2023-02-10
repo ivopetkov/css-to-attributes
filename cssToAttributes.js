@@ -62,7 +62,11 @@ var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes :
             if (useCache && typeof lastCheckedStyleSheetContent[i] !== 'undefined' && lastCheckedStyleSheetContent[i] === styleSheetContent) {
                 continue;
             }
-            processCssRules(styleSheet.cssRules);
+            try {
+                processCssRules(styleSheet.cssRules);
+            } catch (e) {
+                // ignore; may be CSSStyleSheet.cssRules getter: Not allowed to access cross-origin stylesheet
+            }
             lastCheckedStyleSheetContent[i] = styleSheetContent;
         };
         //console.timeEnd(timerLabel);

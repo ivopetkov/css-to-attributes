@@ -109,11 +109,13 @@ var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes :
 
     var updateObservedElements = function () {
         //console.time('cssToAttributes:updateObservedElements');
+        var updatedElements = [];
         for (var i = 0; i < observedElements.length; i++) {
             var element = observedElements[i];
             if (!document.contains(element)) {
                 continue;
             }
+            var hasChange = false;
             var properties = observedElementsProperties[i];
             var elementStyle = getComputedStyle(element);
             for (var k = 0; k < properties.length; k++) {
@@ -123,13 +125,23 @@ var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes :
                 if (value === '') {
                     if (element.getAttribute(attributeName) !== null) {
                         element.removeAttribute(attributeName);
+                        hasChange = true;
                     }
                 } else {
                     if (element.getAttribute(attributeName) !== value) {
                         element.setAttribute(attributeName, value);
+                        hasChange = true;
                     }
                 }
             }
+            if (hasChange) {
+                updatedElements.push(element);
+            }
+        }
+        if (updatedElements.length > 0) {
+            var event = new Event('css-to-attributes-change');
+            event.elements = updatedElements;
+            window.dispatchEvent(event);
         }
         //console.timeEnd('cssToAttributes:updateObservedElements');
     };

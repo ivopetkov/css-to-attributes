@@ -1,5 +1,5 @@
 /*
- * Responsive Attributes
+ * CSS to Attributes
  * http://ivopetkov.com/
  * Copyright (c) Ivo Petkov
  * Free to use under the MIT license.
@@ -52,9 +52,17 @@ var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes :
         }
     };
 
+    var updateObservedSelectorsListAnimationFrameRequest = null;
+    var updateObservedSelectorsListOnAnimationFrame = function (useCache) {
+        if (useCache && updateObservedSelectorsListAnimationFrameRequest === false) {
+            return;
+        }
+        updateObservedSelectorsListAnimationFrameRequest = useCache;
+    };
+
     var updateObservedSelectorsList = function (useCache) {
-        //var timerLabel = 'cssToAttributes:updateObservedSelectorsList - ' + (useCache ? 'use cache' : 'no cache');
-        //console.time(timerLabel);
+        // var timerLabel = 'cssToAttributes:updateObservedSelectorsList - ' + (useCache ? 'use cache' : 'no cache');
+        // console.time(timerLabel);
         var styleSheets = document.styleSheets;
         for (var i = 0; i < styleSheets.length; i++) {
             var styleSheet = styleSheets[i];
@@ -71,6 +79,11 @@ var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes :
         };
         //console.timeEnd(timerLabel);
     }
+
+    var updateObservedElementsListAnimationFrameRequest = null;
+    var updateObservedElementsListOnAnimationFrame = function () {
+        updateObservedElementsListAnimationFrameRequest = true;
+    };
 
     var updateObservedElementsList = function () {
         //console.time('cssToAttributes:updateObservedElementsList');
@@ -105,6 +118,11 @@ var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes :
             value = value.split('\\' + specialChar).join(specialChar);
         }
         return value;
+    };
+
+    var updateObservedElementsAnimationFrameRequest = null;
+    var updateObservedElementsOnAnimationFrame = function () {
+        updateObservedElementsAnimationFrameRequest = true;
     };
 
     var updateObservedElements = function () {
@@ -146,82 +164,105 @@ var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes :
         //console.timeEnd('cssToAttributes:updateObservedElements');
     };
 
-    var eventsAttached = false;
-    var attachEvents = function () {
-        if (eventsAttached) {
-            return;
-        }
-        eventsAttached = true;
-        window.addEventListener('resize', function () {
-            updateObservedElementsList();
-            updateObservedElements();
-        });
-        window.addEventListener('load', function () {
-            updateObservedSelectorsList(true);
-            updateObservedElementsList();
-            updateObservedElements();
-        });
-        window.addEventListener('orientationchange', function () {
-            updateObservedElementsList();
-            updateObservedElements();
-        });
-        if (typeof MutationObserver !== 'undefined') {
-            var observer = new MutationObserver(function (mutationList) {
-                var hasChangeInHead = false;
-                var hasExternalChange = false;
-                for (var i = 0; i < mutationList.length; i++) {
-                    var mutationItem = mutationList[i];
-                    var mutationTarget = mutationItem.target;
-                    if (documentHead.contains(mutationTarget)) {
-                        hasChangeInHead = true;
-                        hasExternalChange = true;
-                        break;
-                    }
-                    if (!hasExternalChange) {
-                        if (mutationItem.type === 'attributes') {
-                            var index = observedElements.indexOf(mutationTarget);
-                            if (index !== -1) {
-                                if (observedElementsProperties[index].indexOf(cssPropertyPrefix + mutationItem.attributeName) === -1) {
-                                    hasExternalChange = true;
-                                }
-                            } else {
+    window.addEventListener('resize', function () {
+        updateObservedElementsListOnAnimationFrame();
+        updateObservedElementsOnAnimationFrame();
+    });
+
+    window.addEventListener('load', function () {
+        updateObservedSelectorsListOnAnimationFrame(true);
+        updateObservedElementsListOnAnimationFrame();
+        updateObservedElementsOnAnimationFrame();
+    });
+
+    window.addEventListener('orientationchange', function () {
+        updateObservedElementsListOnAnimationFrame();
+        updateObservedElementsOnAnimationFrame();
+    });
+
+    if (typeof MutationObserver !== 'undefined') {
+        var observer = new MutationObserver(function (mutationList) {
+            var hasChangeInHead = false;
+            var hasExternalChange = false;
+            for (var i = 0; i < mutationList.length; i++) {
+                var mutationItem = mutationList[i];
+                var mutationTarget = mutationItem.target;
+                if (documentHead.contains(mutationTarget)) {
+                    hasChangeInHead = true;
+                    hasExternalChange = true;
+                    break;
+                }
+                if (!hasExternalChange) {
+                    if (mutationItem.type === 'attributes') {
+                        var index = observedElements.indexOf(mutationTarget);
+                        if (index !== -1) {
+                            if (observedElementsProperties[index].indexOf(cssPropertyPrefix + mutationItem.attributeName) === -1) {
                                 hasExternalChange = true;
                             }
                         } else {
                             hasExternalChange = true;
                         }
+                    } else {
+                        hasExternalChange = true;
                     }
                 }
-                if (hasChangeInHead) {
-                    updateObservedSelectorsList(true);
-                }
-                if (hasExternalChange) {
-                    updateObservedElementsList();
-                    updateObservedElements();
-                }
-            });
-            observer.observe(document, { childList: true, subtree: true, attributes: true });
-        }
+            }
+            if (hasChangeInHead) {
+                updateObservedSelectorsListOnAnimationFrame(true);
+            }
+            if (hasExternalChange) {
+                updateObservedElementsListOnAnimationFrame();
+                updateObservedElementsOnAnimationFrame();
+            }
+        });
+        observer.observe(document, { childList: true, subtree: true, attributes: true });
+    }
+
+    var requestAnimationFrameFunction = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function (callback) {
+        window.setTimeout(callback, 1000 / 60);
     };
 
+    var check = function () {
+        if (document.readyState === 'loading') {
+            updateObservedSelectorsListOnAnimationFrame(true);
+            updateObservedElementsListOnAnimationFrame();
+            updateObservedElementsOnAnimationFrame();
+        }
+
+        if (updateObservedSelectorsListAnimationFrameRequest !== null) {
+            updateObservedSelectorsList(updateObservedSelectorsListAnimationFrameRequest);
+            updateObservedSelectorsListAnimationFrameRequest = null;
+        }
+        if (updateObservedElementsListAnimationFrameRequest !== null) {
+            updateObservedElementsList();
+            updateObservedElementsListAnimationFrameRequest = null;
+        }
+        if (updateObservedElementsAnimationFrameRequest !== null) {
+            updateObservedElements();
+            updateObservedElementsAnimationFrameRequest = null;
+        }
+
+        requestAnimationFrameFunction(check);
+    };
+    check();
+
     document.addEventListener('readystatechange', () => { // interactive or complete
-        attachEvents();
-        updateObservedSelectorsList(true);
+        updateObservedSelectorsList(false);
         updateObservedElementsList();
         updateObservedElements();
     });
+
     if (document.readyState === 'complete') {
-        attachEvents();
+        updateObservedSelectorsList(false);
+        updateObservedElementsList();
+        updateObservedElements();
     }
-    updateObservedSelectorsList(true);
-    updateObservedElementsList();
-    updateObservedElements();
 
     return {
         'run': function (forceCheckSelectors) {
-            updateObservedSelectorsList(typeof forceCheckSelectors !== 'undefined' && forceCheckSelectors ? false : true);
-            updateObservedElementsList();
-            updateObservedElements();
+            updateObservedSelectorsListOnAnimationFrame(typeof forceCheckSelectors !== 'undefined' && forceCheckSelectors ? false : true);
+            updateObservedElementsListOnAnimationFrame();
+            updateObservedElementsOnAnimationFrame();
         }
     };
 

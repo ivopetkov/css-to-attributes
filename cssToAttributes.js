@@ -260,9 +260,9 @@ var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes :
 
     return {
         'run': function (forceCheckSelectors) {
-            updateObservedSelectorsListOnAnimationFrame(typeof forceCheckSelectors !== 'undefined' && forceCheckSelectors ? false : true);
-            updateObservedElementsListOnAnimationFrame();
-            updateObservedElementsOnAnimationFrame();
+            updateObservedSelectorsList(typeof forceCheckSelectors !== 'undefined' && forceCheckSelectors ? false : true);
+            updateObservedElementsList();
+            updateObservedElements();
         }
     };
 

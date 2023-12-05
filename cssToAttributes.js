@@ -9,6 +9,9 @@
  * When uneven number of quotes is used, they must be escaped (example: "" \").
  * Always escape ! ; { } in CSS rules.
  * Always escape " and \ in attribute selectors (Example: [attribute="\" \\ value"]).
+ * 
+ * Debug:
+ * document.cookie = "ivopetkov-css-to-attributes=debug";
  */
 
 var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes : (function () {
@@ -22,6 +25,8 @@ var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes :
     var observedElements = [];
     var observedElementsProperties = [];
     var lastCheckedStyleSheetContent = [];
+
+    var debug = document.cookie.indexOf('ivopetkov-css-to-attributes=debug') !== -1;
 
     var processCssRules = function (cssRules) {
         for (var i = 0; i < cssRules.length; i++) {
@@ -61,8 +66,10 @@ var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes :
     };
 
     var updateObservedSelectorsList = function (useCache) {
-        // var timerLabel = 'cssToAttributes:updateObservedSelectorsList - ' + (useCache ? 'use cache' : 'no cache');
-        // console.time(timerLabel);
+        if (debug) {
+            var timerLabel = 'cssToAttributes::updateObservedSelectorsList - ' + (useCache ? 'use cache' : 'no cache');
+            console.time(timerLabel);
+        }
         var styleSheets = document.styleSheets;
         for (var i = 0; i < styleSheets.length; i++) {
             var styleSheet = styleSheets[i];
@@ -77,7 +84,9 @@ var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes :
             }
             lastCheckedStyleSheetContent[i] = styleSheetContent;
         };
-        //console.timeEnd(timerLabel);
+        if (debug) {
+            console.timeEnd(timerLabel);
+        }
     }
 
     var updateObservedElementsListAnimationFrameRequest = null;
@@ -86,7 +95,10 @@ var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes :
     };
 
     var updateObservedElementsList = function () {
-        //console.time('cssToAttributes:updateObservedElementsList');
+        if (debug) {
+            var timerLabel = 'cssToAttributes::updateObservedElementsList';
+            console.time(timerLabel);
+        }
         for (var i = 0; i < observedSelectors.length; i++) {
             var selector = observedSelectors[i];
             var properties = observedSelectorsProperties[i];
@@ -108,7 +120,9 @@ var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes :
                 }
             }
         }
-        //console.timeEnd('cssToAttributes:updateObservedElementsList');
+        if (debug) {
+            console.timeEnd(timerLabel);
+        }
     };
 
     var unescapeValue = function (value) {
@@ -126,7 +140,10 @@ var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes :
     };
 
     var updateObservedElements = function () {
-        //console.time('cssToAttributes:updateObservedElements');
+        if (debug) {
+            var timerLabel = 'cssToAttributes::updateObservedElements';
+            console.time(timerLabel);
+        }
         var updatedElements = [];
         for (var i = 0; i < observedElements.length; i++) {
             var element = observedElements[i];
@@ -161,7 +178,9 @@ var cssToAttributes = typeof cssToAttributes !== 'undefined' ? cssToAttributes :
             event.elements = updatedElements;
             window.dispatchEvent(event);
         }
-        //console.timeEnd('cssToAttributes:updateObservedElements');
+        if (debug) {
+            console.timeEnd(timerLabel);
+        }
     };
 
     window.addEventListener('resize', function () {
